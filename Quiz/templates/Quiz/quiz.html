@@ -1,0 +1,790 @@
+{% extends 'Quiz/base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+
+<div id="game_parameters">
+    <a href="https://thomasd.pythonanywhere.com/" target="_blank">
+        <img src="{% static 'profile_pic.png' %}" id="profile_pic" />
+    </a>
+    <h1 id="homepage_title"> Bienvenue dans Trop Plant Quiz !</h1>
+    <h1> Choisissez la configuration du quiz </h1>
+    <div id="game_mode_panel">
+        <div>
+            <h2> MODE </h2>
+        </div>
+        <div>
+            <button type='button' class="mode_button" id="infinite_button"> Infini </button>
+            <button type='button' class="mode_button" id="ten_plants_button"> 10 plantes </button>
+            <button type='button' class="mode_button" id="timer_button"> Timer </button>
+        </div>
+    </div>
+    <div id="game_difficulty_panel">
+        <div>
+            <h2> DIFFICULTE </h2>
+        </div>
+        <div id="difficulty_button_list">
+            <div>
+                <button type='button' class='difficulty_button' id="easy_button"> Facile </button>
+                <p class="mode_difficulte_description"> 4 propositions <br> de nom de plante <br> par essai</p>
+            </div>
+            <div>
+                <button type='button' class='difficulty_button' id="medium_button"> Intermédiaire </button>
+                <p class="mode_difficulte_description"> A vous de saisir <br> le nom de la plante</p>
+            </div>
+            <div>
+                <button type='button' class='difficulty_button' id="inverse_button"> Inverse </button>
+                <p class="mode_difficulte_description">
+                    Vous avez le nom
+                    <br> de la plante,
+                    <br> à vous de retrouver
+                    <br> les photos
+                    <br> qui correspondent
+                </p>
+            </div>
+            <div>
+                <button type='button' class='difficulty_button' id="freestyle_button"> Free Style </button>
+                <p class="mode_difficulte_description">
+                    A chaque tentative,
+                    <br> n'importe quelle
+                    <br> type de question
+                    <br> peut être posée
+                </p>
+            </div>
+            <div>
+                <button type='button' class='difficulty_button' id="instant_death_button"> Mort Subite </button>
+                <p class="mode_difficulte_description">
+                    Vous n'avez
+                    <br> pas le droit à l'erreur !
+                    <br> Vous serez intérrogé
+                    <br> sur tous les types
+                    <br> de questions
+                </p>
+            </div>
+        </div>
+    </div>
+    <div id="habitats_pannel">
+        <div>
+            <h2> HABITATS </h2>
+        </div>
+        <div id="habitat_list">
+        </div>
+    </div>
+    <div id="start_game_button_container">
+        <button type="button" id="start_game_button">Démarrer le jeu !</button>
+    </div>
+</div>
+
+<div id="game_scene">
+    <div id="home_icon_panel">
+        <!-- créditer Dave Gandy -->
+        <img src="{% static 'home.png' %}" id="home_icon" />
+    </div>
+    <div id="hint_section">
+        <div id="hint_plant_picture">
+        </div>
+        <div id="hint_plant_name">
+        </div>
+    </div>
+    <div id='answer_field'>
+        <div id="answer_choice_name">
+        </div>
+        <div id="answer_input_name">
+            <input type='text' placeholder='family name' class='input_field' id='family_name_input_field'></input>
+            <input type='text' placeholder='genus name' class='input_field' id='genus_name_input_field'></input>
+            <input type='text' placeholder='specie name' class='input_field' id='specie_name_input_field'></input>
+        </div>
+        <div id="answer_choice_picture">
+        </div>
+    </div>
+    <div id='UI'>
+        <button type='button' id='submit_answer_button'>Vérifier les réponses</button>
+        <button type='button' id='new_plant_button'>Identifier une autre plante</button>
+    </div>
+    <div id="score_and_timer">
+        <div id="score_panel">
+            <h1 id="score_counter"></h1>
+            <div id="particle-area"></div>
+        </div>
+        <div id="timer">
+            <!-- Créditer riajulislam  -->
+            <img src="{% static 'stopwatch_10028891.png' %}" id="timer_icon" />
+            <h1 id="time_left"> </h1>
+        </div>
+    </div>
+</div>
+
+<div id="end_scene">
+    <h1 id="end_scene_title">Fin de la partie !</h1>
+    <h1 id="final_score"></h1>
+    <div id='end_scene_button'>
+        <button type="button" id='try_again_button'>Retenter ?</button>
+        <button type="button" id='home_button'>Revenir au menu</button>
+    </div>
+</div>
+
+
+<script>
+    var staticBasePath = "{% static 'plant_pictures/' %}";
+    
+    var game_mode = ''
+    var game_difficulty = ''
+
+    var selected_habitats = []
+
+    var freestyle_difficulty_activated = false
+    var instant_death = false
+
+    const MAX_NUMBER_OF_PICTURES_DISPLAYED = 3
+    const NUMBER_OF_MISLEADING_HINTS = 3
+    const TIMER_IN_SEC = 180
+
+    var plant_to_guess
+    var plant_pictures
+    var misleading_plants
+    var easy_mode_answer = ''
+    var misleading_pictures
+    var inverse_mode_answer = ''
+    var ten_plants_array = []
+
+    var habitat_list = ['orchard', 'maize', 'rice', 'rubber', 'teak', 'bambou', 'fallow', 'community_forest', 'secondary_forest']
+
+    var score = 0
+
+    $(document).ready(function () {
+        $('#game_scene').hide()
+        $('#end_scene').hide()
+
+        for (let i = 0; i < habitat_list.length; i++) {
+            $('#habitat_list').append('<button type="button" class="habitat_button" id="' + habitat_list[i] + '">' + habitat_list[i] + '</button')
+        }
+
+        setHabitatCickFunction()
+    })
+
+    function setHabitatCickFunction() {
+        $('.habitat_button').click(function () {
+            if (jQuery.inArray($(this).attr('id'), selected_habitats) === -1) {
+                $(this).css({ 'background-color': '#CE8DDE', 'border-color': '#CE8DDE', 'color': '#F7F4FF', 'font-weight': 'bold' })
+                selected_habitats.push($(this).attr('id'))
+            } else {
+                selected_habitats.splice(selected_habitats.indexOf($(this).attr('id')), 1)
+                $(this).css({ 'background-color': '', 'border-color': '', 'color': '', 'font-weight': '' })
+            }
+        });
+    };
+
+    ///////////////////////////////////////////////////////////
+    // section des boutons pour la sélection du mode de jeu //
+    /////////////////////////////////////////////////////////
+    $('.mode_button').click(function () {
+        if (game_mode != '') {
+            var button_to_reset = $('#' + game_mode + '_button')
+            button_to_reset.css({ 'background-color': '', 'border-color': '', 'color': '', 'font-weight': '' })
+        }
+
+        $(this).css({ 'background-color': '#CE8DDE', 'border-color': '#CE8DDE', 'color': '#F7F4FF', 'font-weight': 'bold' })
+
+        game_mode = $(this).attr('id').split("_button")[0]
+
+        if (game_difficulty != '') {
+            setStartGameButtonReadyStyle()
+        }
+    });
+
+    $('.difficulty_button').click(function () {
+        if (game_difficulty != '') {
+            var button_to_reset = $('#' + game_difficulty + '_button')
+            button_to_reset.css({ 'background-color': '', 'border-color': '', 'color': '', 'font-weight': '' })
+        }
+
+        $(this).css({ 'background-color': '#CE8DDE', 'border-color': '#CE8DDE', 'color': '#F7F4FF', 'font-weight': 'bold' })
+
+        game_difficulty = $(this).attr('id').split("_button")[0]
+
+        if (game_difficulty === 'freestyle' || game_difficulty === 'instant_death') {
+            freestyle_difficulty_activated = true
+        }
+
+        if (game_difficulty === 'instant_death') {
+            instant_death = true
+        }
+
+        if (game_mode != '') {
+            setStartGameButtonReadyStyle()
+        }
+    });
+
+    function setStartGameButtonReadyStyle() {
+        $('#start_game_button').css({
+            'background-color': '#1B998B', 'border-color': '#1B998B', 'color': '#F0FEEE', 'font-weight': 'bold',
+            'font-size': '40px', 'border-width': ' 5px'
+        });
+    };
+
+    ///////////////////////////////////////////
+    // section pour l'initialisation du jeu //
+    /////////////////////////////////////////
+    $('#start_game_button').click(async function () {
+        if (game_difficulty != '' && game_mode != '') {
+            if (freestyle_difficulty_activated === true) {
+                pickRandomDifficulty()
+            }
+
+            if (game_mode === 'ten_plants') {
+                await getTenPlanttoGuess()
+            }
+
+            initializeGameScene()
+            newPlant(true)
+        }
+    });
+
+    function initializeGameScene() {
+        $('#game_parameters').hide()
+        $('#game_scene').show()
+
+        $('#score_counter').text('Score : ' + score)
+
+        if (game_mode === 'timer') {
+            createTimer()
+        } else {
+            ($('#timer').hide())
+        }
+
+        switch (game_difficulty) {
+            case 'easy':
+                $('#hint_plant_picture').show()
+                $('#answer_choice_name').show()
+                $('#hint_plant_name').hide()
+                $('#answer_input_name').hide()
+                $('#answer_choice_picture').hide()
+                break;
+            case 'medium':
+                $('#hint_plant_picture').show()
+                $('#answer_input_name').show()
+                $('#hint_plant_name').hide()
+                $('#answer_choice_name').hide()
+                $('#answer_choice_picture').hide()
+                break;
+            case 'inverse':
+                $('#hint_plant_name').show()
+                $('#answer_choice_picture').show()
+                $('#hint_plant_picture').hide()
+                $('#answer_choice_name').hide()
+                $('#answer_input_name').hide()
+                break;
+        }
+    }
+
+    function pickRandomDifficulty() {
+        var difficulty_randomizer = ['easy', 'medium', 'inverse']
+        game_difficulty = difficulty_randomizer[(Math.floor(Math.random() * difficulty_randomizer.length))]
+    }
+
+    //////////////////////////////////////////////////////////
+    // Section pour afficher une nouvelle plante à deviner //
+    ////////////////////////////////////////////////////////
+    async function newPlant(first_plant = false) {
+        if (first_plant === false) {
+            await cleanUI()
+
+            if (freestyle_difficulty_activated === true) {
+                renewGameScene()
+            }
+        }
+
+        await getPlantItem(first_plant)
+
+        displayHints()
+    };
+
+    async function getPlantItem(first_plant) {
+        if (game_mode === 'ten_plants') {
+            if (first_plant === false) {
+                var index = ten_plants_array.indexOf(plant_to_guess)
+                ten_plants_array.splice(index, 1)
+            }
+
+            var random_index = Math.floor(Math.random() * ten_plants_array.length)
+            plant_to_guess = ten_plants_array[random_index]
+            plant_pictures = plant_to_guess.pictures
+            console.log(plant_pictures)
+        } else {
+            await getPlanttoGuess()
+        }
+    };
+
+    async function displayHints() {
+        if (game_difficulty === 'inverse') {
+            var family_name_upperCased = plant_to_guess.family_name.charAt(0).toUpperCase() + plant_to_guess.family_name.slice(1);
+            var genus_name_upperCased = plant_to_guess.genus_name.charAt(0).toUpperCase() + plant_to_guess.genus_name.slice(1);
+
+            $('#hint_plant_name').append('<h1>' + genus_name_upperCased + ' ' + plant_to_guess.specie_name + ' - ' + family_name_upperCased + '</h1')
+
+            await getMisleadingPictures(plant_to_guess.id, NUMBER_OF_MISLEADING_HINTS)
+
+            var pictures_to_display = misleading_pictures;
+
+            plant_picture = plant_pictures[Math.floor(Math.random() * plant_pictures.length)]
+            pictures_to_display.push(plant_picture)
+
+            for (let i = 0; i < NUMBER_OF_MISLEADING_HINTS + 1; i++) {
+                var random_index = Math.floor(Math.random() * pictures_to_display.length)
+                var added_picture = pictures_to_display[random_index]
+                $('#answer_choice_picture').append('<img src="' + staticBasePath + added_picture.picture.split("/media/")[1] + '" class="image_choice" id="' + added_picture.id + '">')
+                pictures_to_display.splice(random_index, 1)
+            }
+
+            $('.image_choice').each(function () {
+                $(this).css({ 'height': '300px', 'width': 'auto' })
+            })
+
+            setClickFunction()
+
+        } else {
+
+            displayPlantPictures()
+        }
+
+        if (game_difficulty === 'easy') {
+            await getMisleadingPlants(plant_to_guess.id, NUMBER_OF_MISLEADING_HINTS)
+
+            var plant_names_to_display = misleading_plants
+            plant_names_to_display.push(plant_to_guess)
+
+            for (let i = 0; i < NUMBER_OF_MISLEADING_HINTS + 1; i++) {
+                var random_index = Math.floor(Math.random() * plant_names_to_display.length)
+                var added_plant = plant_names_to_display[random_index]
+                var family_name_upperCased = added_plant.family_name.charAt(0).toUpperCase() + added_plant.family_name.slice(1);
+                var genus_name_upperCased = added_plant.genus_name.charAt(0).toUpperCase() + added_plant.genus_name.slice(1);
+                $('#answer_choice_name').append('<button type="button" class="plant_name_button" id="' + added_plant.id + '">' + family_name_upperCased + ' - ' + genus_name_upperCased + ' ' + added_plant.specie_name + '</button')
+                plant_names_to_display.splice(random_index, 1)
+            }
+
+            setClickFunction()
+        }
+    };
+
+    function displayPlantPictures() {
+        for (let i = 0; i < Math.min(MAX_NUMBER_OF_PICTURES_DISPLAYED, plant_pictures.length); i++) {
+            var random_index = Math.floor(Math.random() * plant_pictures.length)
+            var plant_picture = plant_pictures[random_index]
+            console.log('plant_picture.id', plant_picture.id)
+            $('#hint_plant_picture').append('<img src="' + staticBasePath + plant_picture.picture.split("/media/")[1] + '" class="plant_picture" />')
+            plant_pictures.splice(random_index, 1)
+        }
+
+        if ($('#hint_plant_picture').children().length === 2) {
+            $('#hint_plant_picture').children().first().css('left', '35%')
+            $('#hint_plant_picture').children().last().css('left', '65%')
+        } else if ($('#hint_plant_picture').children().length === 3) {
+            $('#hint_plant_picture').children().first().css('left', '15%')
+            $('#hint_plant_picture').children().last().css('left', '85%')
+        }
+    };
+
+    function setClickFunction() {
+        if (game_difficulty === 'easy') {
+            $('.plant_name_button').click(function () {
+                if (easy_mode_answer != '') {
+                    $('.plant_name_button').each(function () {
+                        if ($(this).attr('id') === easy_mode_answer && $(this).css('border-color') != 'rgb(255, 0, 0)') {
+                            $(this).css({ 'background-color': '', 'border-color': '', 'color': '', 'font-weight': '' })
+                        }
+                    })
+                }
+
+                $(this).css({ 'background-color': '#CE8DDE', 'border-color': '#CE8DDE', 'color': '#F7F4FF', 'font-weight': 'bold' })
+
+                easy_mode_answer = $(this).attr('id')
+            })
+
+        } else if (game_difficulty === 'inverse') {
+            $('.image_choice').click(function () {
+                $('.image_choice').each(function () {
+                    if ($(this).css('outline') != 'rgb(255, 0, 0) solid 4.8px') {
+                        $(this).css({ 'outline': '' })
+                    }
+                })
+
+                if ($(this).attr('id') === inverse_mode_answer) {
+                    inverse_mode_answer = ''
+                } else {
+                    inverse_mode_answer = $(this).attr('id')
+                    $(this).css({ 'outline': '5px solid #1B998B' })
+                }
+            })
+        }
+    };
+
+    /////////////////////////////////////////////////////////////////////
+    // Fonction qui gère le traitement de la réponse de l'utilisateur //
+    ///////////////////////////////////////////////////////////////////
+    $('#submit_answer_button').click(function () {
+        switch (game_difficulty) {
+            case ('easy'):
+                if (Number(easy_mode_answer) === plant_to_guess.id) {
+                    increaseScore();
+                    newPlant()
+                } else {
+                    if (instant_death === true) {
+                        endGame()
+                    } else {
+                        $('.plant_name_button').each(function () {
+                            if ($(this).attr('id') === easy_mode_answer) {
+                                $(this).css({ 'background-color': '', 'border-color': 'red', 'color': 'red', 'font-weight': '' })
+                            }
+                        })
+                    }
+                }
+                break;
+
+            case ('medium'):
+                var input_family_name = $('#family_name_input_field').val().toLowerCase()
+                var input_genus_name = $('#genus_name_input_field').val().toLowerCase()
+                var input_specie_name = $('#specie_name_input_field').val().toLowerCase()
+
+                if (input_family_name != plant_to_guess.family_name) {
+                    if (instant_death === true) {
+                        endGame()
+                    } else {
+                        $('#family_name_input_field').css({ 'color': 'red', 'border-color': 'red' })
+                    }
+                } else if ($('#family_name_input_field').css('border-color') === 'rgb(255, 0, 0)') {
+                    $('#family_name_input_field').css({ 'color': '', 'border-color': '' })
+                }
+
+                if (input_genus_name != plant_to_guess.genus_name) {
+                    if (instant_death === true) {
+                        endGame()
+                    } else {
+                        $('#genus_name_input_field').css({ 'color': 'red', 'border-color': 'red' })
+                    }
+                } else if ($('#genus_name_input_field').css('border-color') === 'rgb(255, 0, 0)') {
+                    $('#genus_name_input_field').css({ 'color': '', 'border-color': '' })
+                }
+
+                if (input_specie_name != plant_to_guess.specie_name) {
+                    if (instant_death === true) {
+                        endGame()
+                    } else {
+                        $('#specie_name_input_field').css({ 'color': 'red', 'border-color': 'red' })
+                    }
+                } else if ($('#genus_name_input_field').css('border-color') === 'rgb(255, 0, 0)') {
+                    $('#specie_name_input_field').css({ 'color': '', 'border-color': '' })
+                }
+
+                if (input_family_name === plant_to_guess.family_name && input_genus_name === plant_to_guess.genus_name && input_specie_name === plant_to_guess.specie_name) {
+                    increaseScore();
+                    newPlant();
+                }
+                break;
+
+            case 'inverse':
+                var good_answer = false
+
+                console.log('plant_to_guess.pictures.length', plant_to_guess.pictures.length)
+
+                for (let i = 0; i < plant_to_guess.pictures.length; i++) {
+                    if (Number(inverse_mode_answer) === plant_to_guess.pictures[i].id) {
+                        good_answer = true
+                    }
+                }
+
+                if (good_answer === true) {
+                    increaseScore();
+                    newPlant();
+                } else if (instant_death === true) {
+                    endGame()
+                } else {
+                    $('.image_choice').each(function () {
+                        if ($(this).attr('id') === inverse_mode_answer) {
+                            $(this).css({ 'outline': '5px solid red' })
+                        }
+                    })
+
+                    inverse_mode_answer = ''
+                }
+                break;
+        }
+
+        if (game_mode === 'ten_plants' && ten_plants_array.length === 1) {
+            endGame()
+        }
+    });
+
+    //////////////////////////////////////////////////////////////////
+    // Section qui gère le renouvellement de la boucle de gameplay //
+    ////////////////////////////////////////////////////////////////
+    $('#new_plant_button').click(function () {
+        newPlant()
+    });
+
+    function renewGameScene() {
+        switch (game_difficulty) {
+            case 'easy':
+                $('#hint_plant_picture').hide()
+                $('#answer_choice_name').hide()
+                break;
+            case 'medium':
+                $('#hint_plant_picture').hide()
+                $('#answer_input_name').hide()
+                break;
+            case 'inverse':
+                $('#hint_plant_name').hide()
+                $('#answer_choice_picture').hide()
+                break;
+        }
+
+        pickRandomDifficulty()
+
+        switch (game_difficulty) {
+            case 'easy':
+                $('#hint_plant_picture').show()
+                $('#answer_choice_name').show()
+                break;
+            case 'medium':
+                $('#hint_plant_picture').show()
+                $('#answer_input_name').show()
+                break;
+            case 'inverse':
+                $('#hint_plant_name').show()
+                $('#answer_choice_picture').show()
+                break;
+        }
+    };
+
+    function cleanUI() {
+        return new Promise((resolve, reject) => {
+            switch (game_difficulty) {
+                case 'easy':
+                    $('.plant_name_button').each(function () {
+                        $(this).remove()
+                    });
+                    $('.plant_picture').remove()
+                    easy_mode_answer = ''
+                    break;
+                case 'medium':
+                    $('#family_name_input_field').val('')
+                    $('#genus_name_input_field').val('')
+                    $('#specie_name_input_field').val('')
+                    $('.plant_picture').remove()
+                    $(genus_name_input_field).css({ 'color': '', 'border-color': '' })
+                    $(specie_name_input_field).css({ 'color': '', 'border-color': '' })
+                    break;
+                case 'inverse':
+                    $('#hint_plant_name').children().remove()
+                    inverse_mode_answer = ''
+                    $('.image_choice').each(function () {
+                        $(this).remove()
+                    });
+                    break;
+            }
+
+            resolve("L'UI a été nettoyé")
+        })
+    };
+
+    ////////////////////////////
+    // Section liée au score //
+    //////////////////////////
+    function increaseScore() {
+        score += 1;
+
+        console.log('plant_to_guess', plant_to_guess)
+        console.log('plant_to_guess.number_of_guess', plant_to_guess.number_of_guess)
+
+        plant_to_guess.number_of_guess += 1
+
+        console.log('plant_to_guess.number_of_guess', plant_to_guess.number_of_guess)
+
+        $('#score_counter').text('Score : ' + score);
+
+        $('#score_counter').css({ "background-color": "#F2AF13", });
+        $('#score_counter').css({ "color": "yellow", });
+
+        $("#score_counter").one("transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd", function () {
+            $('#score_counter').css({ "background-color": "yellow", });
+            $('#score_counter').css({ "color": "#F2AF13", });
+        });
+    }
+
+    ///////////////////////////////
+    // Timer pour le mode Timer //
+    /////////////////////////////
+    var TimerCountdown
+
+    function createTimer() {
+        $("#time_left").html(TIMER_IN_SEC)
+
+        TimerCountdown = setInterval(Timer, 1000);
+
+        function Timer() {
+            $("#time_left").html($("#time_left").html() - 1);
+
+            if ($("#time_left").html() === '0') {
+                endGame()
+            }
+        }
+    };
+
+    function stopTimer() {
+        clearInterval(TimerCountdown);
+    }
+
+    /////////////////////////////////
+    // Section pour la fin du jeu //
+    ///////////////////////////////
+    function endGame() {
+        $('#game_scene').hide()
+        $('#end_scene').show()
+        $('#final_score').html('SCORE FINAL : ' + score)
+
+        if (game_mode === 'timer') {
+            stopTimer()
+        }
+    };
+
+    $('#try_again_button').click(function () {
+        score = 0
+        $('#score_counter').text('Score : ' + score);
+        $('#end_scene').hide()
+        $('#game_scene').show()
+        if (game_mode === 'timer') {
+            createTimer()
+        }
+        newPlant()
+    })
+
+    ///////////////////////////////////////////////////
+    // Section qui gère le retour au menu principal //
+    /////////////////////////////////////////////////
+    $('#home_icon').click(async function () {
+        returnHome()
+    });
+
+    $('#home_button').click(async function () {
+        returnHome()
+    });
+
+    function returnHome() {
+        game_difficulty = ''
+        game_mode = ''
+        score = 0
+        cleanUI()
+
+        $('#game_scene').hide()
+        $('#end_scene').hide()
+        $('.mode_button').each(function () {
+            $(this).css({ 'background-color': '', 'border-color': '', 'color': '', 'font-weight': '' })
+        })
+        $('.difficulty_button').each(function () {
+            $(this).css({ 'background-color': '', 'border-color': '', 'color': '', 'font-weight': '' })
+        })
+        $('#start_game_button').css({ 'background-color': '', 'border-color': '', 'color': '', 'font-weight': '' })
+        $('#game_parameters').show()
+    }
+
+    /////////////////////////////
+    // Requête AJAX sur l'API //
+    ///////////////////////////
+    function getPlanttoGuess() {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: "http://localhost:8000/api/planttoguess/",
+                method: "GET",
+                data: {
+                    habitats: JSON.stringify(selected_habitats),
+                },
+                dataType: "json",
+                success: function (data) {
+                    console.log('genus, specie', data.genus_name, data.specie_name)
+
+                    plant_to_guess = data
+                    plant_pictures = data.pictures
+
+                    if (data) {
+                        resolve('La plante a été récupérée')
+                    } else {
+                        reject("La plante n'a pas été récupéré")
+                    }
+                }
+            });
+        });
+    };
+
+    function getTenPlanttoGuess() {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: "http://localhost:8000/api/tenplantstoguess/",
+                method: "GET",
+                data: {
+                    habitats: JSON.stringify(selected_habitats),
+                },
+                dataType: "json",
+                success: function (data) {
+                    ten_plants_array = data
+                    console.log('ten_plants_array', ten_plants_array)
+
+                    if (data) {
+                        resolve('Les 10 plantes ont été récupérées')
+                    } else {
+                        reject("Les 10 plantes n'ont pas été récupérées")
+                    }
+                }
+            });
+        });
+    };
+
+    function getMisleadingPlants(plantID, NUMBER_OF_MISLEADING_HINTS) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: "http://localhost:8000/api/getmisleadingplants/",
+                method: "GET",
+                data: {
+                    id: plantID,
+                    NUMBER_OF_MISLEADING_HINTS: NUMBER_OF_MISLEADING_HINTS
+                },
+                dataType: "json",
+                success: function (data) {
+                    misleading_plants = data
+
+                    if (data) {
+                        resolve('Les plantes pieges ont bien été récupérées')
+                    } else {
+                        reject("Les plantes pieges n'ont pas été récupérées")
+                    }
+                }
+            });
+        });
+    };
+
+    function getMisleadingPictures(plantID, NUMBER_OF_MISLEADING_HINTS) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: "http://localhost:8000/api/getmisleadingpictures/",
+                method: "GET",
+                data: {
+                    id: plantID,
+                    NUMBER_OF_MISLEADING_HINTS: NUMBER_OF_MISLEADING_HINTS
+                },
+                dataType: "json",
+                success: function (data) {
+                    misleading_pictures = data
+
+                    if (data) {
+                        resolve('Les photos pieges ont bien été récupérées')
+                    } else {
+                        reject("Les photos pieges n'ont pas été récupérées")
+                    }
+                }
+            });
+        });
+    };
+</script>
+
+
+{% endblock %}

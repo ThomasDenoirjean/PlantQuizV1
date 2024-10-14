@@ -1,0 +1,279 @@
+body {
+  background-color: #FFFFEB;
+}
+
+#profile_pic {
+  position: absolute;
+  top: 0%;
+  right: 0%;
+  margin-right: 0.5vw;
+  margin-top: 0.5vw;
+  width: 5vw;
+  height: 5vw;
+  border-radius: 25%;
+}
+
+#homepage_title,
+#end_scene_title {
+  color: #1B998B;
+  text-align: center;
+  font-size: 50px;
+}
+
+h1,
+h2 {
+  text-align: center;
+}
+
+button {
+  border-radius: 25px;
+  padding: 15px;
+}
+
+#game_mode_panel {
+  margin: 25px;
+}
+
+#game_mode_panel div {
+  text-align: center;
+}
+
+.mode_button,
+.habitat_button,
+.difficulty_button {
+  background-color: #F7F4FF;
+  color: #CE8DDE;
+  font-size: 20px;
+  border: 4px solid #CE8DDE;
+}
+
+.mode_button {
+  width: 12vw;
+  margin-left: 1vw;
+  margin-right: 1vw;
+}
+
+.difficulty_button {
+  width: 11vw;
+  margin-left: 1vw;
+  margin-right: 1vw;
+}
+
+.plant_name_button {
+  background-color: #F7F4FF;
+  color: #CE8DDE;
+  font-size: 14px;
+  border: 4px solid #CE8DDE;
+  width: 22vw;
+  margin-left: 1vw;
+  margin-right: 1vw;
+}
+
+#game_difficulty_panel {
+  margin: 25px;
+}
+
+#game_difficulty_panel div {
+  text-align: center;
+}
+
+#difficulty_button_list div {
+  display: inline-block;
+  vertical-align: top;
+}
+
+#habitat_list {
+  display: flex;
+  justify-content: center;
+}
+
+.habitat_button {
+  margin-left: 1vw;
+}
+
+#start_game_button_container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2vw;
+}
+
+#start_game_button {
+  background-color: #C2F9BB;
+  color: #1B998B;
+  width: 33%;
+  font-size: 40px;
+  border: 5px solid #1B998B;
+  transition: color 1s ease, background-color 1s ease;
+}
+
+#home_icon_panel {
+  position: absolute;
+  top: 0%;
+  right: 0%;
+  transform: translate(-50%, 50%);
+}
+
+#home_icon {
+  width: 3vw;
+  height: auto;
+}
+
+.arrow {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20vw;
+  height: 20vw;
+}
+
+.plant_picture {
+  height: 300px;
+  width: auto;
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#answer_choice_name {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+}
+
+#answer_input_name {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%); 
+}
+
+.input_field {
+  border: 4px solid #CE8DDE;
+  background-color: #F7F4FF;
+  font-size: 20px;
+}
+
+::placeholder {
+  color: black;
+  opacity: 1;
+}
+
+#hint_plant_name h1 {
+  color: #1B998B;
+  font-size: 50px;
+  font-style: italic;
+}
+
+#answer_choice_picture {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+}
+
+/* Chelou ne fonctionne pas !! */
+.image_choice {
+  width: 20vw;
+  height: 20vw;
+  margin-left: 1vw;
+  margin-right: 1vw;
+}
+
+#UI {
+  position: absolute;
+  top: 75%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#UI button,
+#end_scene_button button {
+  border: 5px solid #1B998B;
+  background-color: #C2F9BB;
+  color: #1B998B;
+  width: 22vw;
+  margin-left: 1vw;
+  margin-right: 1vw;
+  font-size: 20px;
+  transition: color 0.5s ease, background-color 0.5s ease;
+}
+
+#UI button:hover,
+#end_scene_button button:hover {
+  background-color: #1B998B;
+  color: #F0FEEE;
+  font-weight: bold;
+}
+
+#score_and_timer {
+  position: absolute;
+  top: 90%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+}
+
+#score_and_timer div {
+  margin-left: 1vw;
+  margin-right: 1vw;
+}
+
+#timer {
+  display: inline-flex;
+}
+
+#timer_icon {
+  width: 100px;
+  height: 100px;
+}
+
+/* Faire du tri dans les styles ici j'ai combiné du vieu code*/
+#score_counter {
+  border: 8px solid #F2AF13;
+  border-radius: 25px;
+  background-color: yellow;
+  color: #F2AF13;
+  height: 5vw;
+  width: 20vw;
+  padding: 5px;
+  font-size: 40px;
+  font-weight: bold;
+  transition: color 0.5s ease, background-color 0.5s ease;
+}
+
+#end_scene {
+  text-align: center;
+}
+
+#final_score {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 8px solid #F2AF13;
+  border-radius: 25px;
+  background-color: yellow;
+  color: #F2AF13;
+  height: 5vw;
+  width: 25vw;
+  padding: 5px;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+#end_scene_button {
+  position: absolute;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#end_scene_button button {
+  font-size: 30px!important;
+}
