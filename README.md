@@ -1,11 +1,11 @@
-# 🌷 PlantQuiz
+# 🌷🌱 PlantQuiz 🌴🌻 
 
 This repo is the first version of a web app that is designed to test your botanical knowledge thanks to quiz with various mode and difficulty level.
 
 # 1- Basics
 ## Which plant information ?
-In my example, I have defined a set of habitats in which the plant I want to train on could be find.
-The pictures that the app will fetch from the Trefle API will be only leaves and flowers pictures.
+In my example, I have defined a set of habitats in which the plants I want to train on could be find.
+The pictures that the app will fetch from the [Trefle API](https://github.com/treflehq/trefle-api) will be only leaves and flowers pictures.
 
 ## Quiz mode
 There are three quiz modes:
@@ -27,17 +27,18 @@ You can select one or multiple habitats, and only plants that can be found in th
 
 # 2- Set up the app
 ## Data structure
-Create a .csv with the first two column being 'Species name' (genus + specie name) and 'family', plus as many habitats as you want (you will have to modify the populate_db.py command accordingly). You don't have to complete the 'family' row, as we will get the family name directly from the Trefle API.
+Create a .csv with the first two column being 'Species name' (genus + specie name) and 'family', plus as many habitats as you want (you will have to modify the populate_db.py command accordingly). You don't have to complete the 'family' row, as we will get the family name directly from the [Trefle API](https://github.com/treflehq/trefle-api).
 
 
 ## Collect plant information
 From the .csv file listing all the species you want to train on, run commands to:
-  - populate_db: extract Plant information and pictures from the Trefle API
+  - populate_db: extract Plant information and pictures from the [Trefle API](https://github.com/treflehq/trefle-api)
   - download_images: download plant pictures from their url*
   - check_missing_items_db: check which plant where on the .csv file but not on the Trefle database**
   - reset_guess_count: the app tracks the number of correct guesses of each plant, considered as a metric for evaluating the degree of accuracy in identifying different plants
 
 *Some plants may not have pictures linked in the Trefle database. Through Django admin interface, you can create the picture objects yourself. Don't forget to add the url link so the picture could be downloaded thanks to the command.
+
 **In this case, you will have to add these species and their pictures directly through Django admin interface.
 
 Don't forget to create a superuser to use the Django admin interface.
