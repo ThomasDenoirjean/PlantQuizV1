@@ -1,6 +1,6 @@
 # 🌷🌱 PlantQuiz 🌴🌻 
 
-This repo is the first version of a web app that is designed to test your botanical knowledge thanks to quiz with various mode and difficulty level.
+This repo is the first version of a learning project that consists in a web app that is designed to test your botanical knowledge thanks to quiz with various modes and difficulties level.
 
 # 1- Basics
 ## Which plant information ?
